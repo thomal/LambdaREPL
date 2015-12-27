@@ -2,11 +2,11 @@
 
 class ASTNode {
   public:
-    virtual ~ASTNode () {}
+    virtual ~ASTNode () {};
     virtual std::string toString() = 0;
 };
 
-class Variable : ASTNode {
+class Variable : public ASTNode {
   public:
     Variable  (char* _name) : name(_name) {}
     virtual ~Variable ();
@@ -15,17 +15,17 @@ class Variable : ASTNode {
     char* name;
 };
 
-class Lambda : ASTNode {
+class Lambda : public ASTNode {
   public:
-    Lambda (ASTNode* _v, ASTNode* _n) : v(_v), n(_n) {}
+    Lambda (Variable* _v, ASTNode* _n) : v(_v), n(_n) {}
     virtual ~Lambda ();
     virtual std::string toString();
     
-    ASTNode* v;
+    Variable* v;
     ASTNode* n;
 };
 
-class Application : ASTNode {
+class Application : public ASTNode {
   public:
     Application (ASTNode* _lhs, ASTNode* _rhs) : lhs(_lhs), rhs(_rhs) {}
     virtual ~Application ();
