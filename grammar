@@ -1,4 +1,4 @@
-%token VARIABLE END LAM
+%token VARIABLE END LAM REPL_ESCAPE
 %start input
 
 %{
@@ -7,7 +7,11 @@
     #include <iostream>
     #include "common.h"
     #include "ast.hpp"
+    #include "repl.hpp"
+    
     ASTNode* root;
+    bool REPLrunning = true;
+    
     extern "C"
     {
         int yyparse(void);
@@ -22,7 +26,12 @@
 %%
 
 input:
-     term                       { root = (ASTNode*) $1; YYACCEPT; };
+     term                       { root = (ASTNode*) $1; YYACCEPT; }
+     | REPL_ESCAPE var          { Variable* v = (Variable*) $2;
+                                  std::string cmd = std::string(v->name);
+                                  delete v;
+                                  REPLCmd(cmd);
+                                  YYACCEPT;};
 
 term:
      var                        { $$ = $1; }
@@ -37,12 +46,19 @@ var:
 %%
 
 void yyerror(char *s) {
-    fprintf(stderr, "%s\n", s);
+    fprintf(stderr, "\n%s\n", s);
 }
 
 int main(void) {
-    yyparse();
-    std::cout << root->toString() << std::endl;
-    delete root;
+    std::cout << "Welcome, enter :quit to exit.\n";
+    while (REPLrunning) {
+        std::cout << "λ> ";
+        yyparse();
+        if (root) {
+            std::cout << root->toString() << std::endl;
+            delete root;
+            root = 0;
+        }
+    }
     return 0;
 }

@@ -4,7 +4,7 @@
 flex patterns
 yacc -d grammar -o lambda.cpp
 gcc -c lex.yy.c -o lex.yy.o
-g++ -g lex.yy.o lambda.cpp ast.cpp -o lambda
+g++ -g lex.yy.o lambda.cpp ast.cpp repl.cpp -o lambda
 
 #Clean
 rm lex.yy.c

@@ -1,3 +1,5 @@
+#ifndef AST_HPP
+#define AST_HPP
 #include <string>
 
 class ASTNode {
@@ -34,3 +36,4 @@ class Application : public ASTNode {
     ASTNode* lhs;
     ASTNode* rhs;
 };
+#endif

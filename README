@@ -1,0 +1,24 @@
+Lambda interpreter
+
+Usage:
+    - Enter one term, press enter for it to be executed
+
+Syntax:
+    [a-z]+      is a λ-term called a variable
+    (λx.y)      is a λ-term called an abstraction iif x and y are λ-terms
+    (x y)       is a λ-term called an application iif x and y are λ-terms
+    
+    L and \ may be used inplace of λ if one desires. One may mix these symbols
+      for λ as one desires. Thus the following is a λ-term:
+      (λx.(Ly.(\z.(y (x z)))))
+
+Present features implemented:
+    - Parse input into AST
+
+Planned features:
+    - Interpretation
+    - Sugar equivilent to LISPs let
+    - Recursion via Y-Combinator
+
+The following are not lambda terms but are recognised by the REPL:
+    :quit       This has the effect of quitting the REPL.
