@@ -15,10 +15,10 @@ class Variable : public ASTNode {
     char* name;
 };
 
-class Lambda : public ASTNode {
+class Abstraction : public ASTNode {
   public:
-    Lambda (Variable* _v, ASTNode* _n) : v(_v), n(_n) {}
-    virtual ~Lambda ();
+    Abstraction (Variable* _v, ASTNode* _n) : v(_v), n(_n) {}
+    virtual ~Abstraction ();
     virtual std::string toString();
     
     Variable* v;

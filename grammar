@@ -1,4 +1,4 @@
-%token VARIABLE END
+%token VARIABLE END LAM
 %start input
 
 %{
@@ -22,15 +22,17 @@
 %%
 
 input:
-        term END                   { root = (ASTNode*) $1; YYACCEPT; };
+     term                       { root = (ASTNode*) $1; YYACCEPT; };
 
 term:
-        var                        { $$ = $1; }
-        | '(' 'L' var '.' term ')' { $$ = (void*)(new Lambda((Variable*)$3, (ASTNode*)$5)); }
-        | '(' term term ')'        { $$ = (void*)(new Application((ASTNode*) $2, (ASTNode*)$3)); };
+     var                        { $$ = $1; }
+     | '(' LAM var '.' term ')' { $$ = (void*)(new Abstraction((Variable*)$3,
+                                                               (ASTNode*) $5));}
+     | '(' term term ')'        { $$ = (void*)(new Application((ASTNode*)$2,
+                                                               (ASTNode*)$3));};
 
 var:
-        VARIABLE                   { $$ = (void*) new Variable((char*) $1); };
+     VARIABLE                   { $$ = (void*) new Variable((char*) $1); };
 
 %%
 

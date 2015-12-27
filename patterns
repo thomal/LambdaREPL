@@ -8,17 +8,15 @@
 
 %%
 
-[a-z]+  {yylval = strdup(yytext);
-         return VARIABLE;}
-
-[()L.]  {return *yytext;}
-
-[ \t\n] {;}
-
-<<EOF>> {return END;}
+[a-z]+   {yylval = strdup(yytext);
+          return VARIABLE;}
+[().]    {return *yytext;}
+λ        {return LAM;}  /* Flex is 8-bit so λ is >1 bytes so can't be in a [] */
+L        {return LAM;}
+\\       {return LAM;}  /* It kinda looks like λ and is easier to type */
+[ \t\n]  {;}
+<<EOF>>  {return END;}
 
 .       {yyerror("invalid character");}
 
 %%
-
-

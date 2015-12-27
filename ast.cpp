@@ -13,13 +13,13 @@ std::string Variable::toString() {
     return std::string(name);
 }
 
-Lambda::~Lambda () {
+Abstraction::~Abstraction () {
     delete v;
     delete n;
 }
 
-std::string Lambda::toString() {
-    return "(L" + v->toString() + "." + n->toString() + ")";
+std::string Abstraction::toString() {
+    return "(λ" + v->toString() + "." + n->toString() + ")";
 }
 
 Application::~Application () {
