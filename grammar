@@ -1,0 +1,43 @@
+%token VARIABLE END
+%start input
+
+%{
+    #include <stdio.h>
+    #include <string>
+    #include <iostream>
+    #include "common.h"
+    #include "ast.hpp"
+    ASTNode* root;
+    extern "C"
+    {
+        int yyparse(void);
+        int yylex(void);  
+        void yyerror(char *);
+        int yywrap() {
+            return 1;
+        }
+    }
+%}
+
+%%
+
+input:
+        term END                        { root = (ASTNode*) $1; printf("Parsing complete.\n"); YYACCEPT; };
+
+term:
+        VARIABLE                        { $$ = (void*) new Variable    ((char*) $1); }
+        | '(' 'L' VARIABLE '.' term ')' { $$ = (void*) new Lambda      ((ASTNode*) $3, (ASTNode*) $5); }
+        | '(' term term ')'             { $$ = (void*) new Application ((ASTNode*) $2, (ASTNode*) $3); };
+
+%%
+
+void yyerror(char *s) {
+    fprintf(stderr, "%s\n", s);
+}
+
+int main(void) {
+    yyparse();
+    std::cout << root->toString() << std::endl;
+    delete root;
+    return 0;
+}

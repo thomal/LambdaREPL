@@ -1,0 +1,24 @@
+%{
+    #include <stdlib.h>
+    #include <string.h> //strdup
+    #include "common.h"
+    #include "lambda.hpp"
+    void yyerror(char *);
+%}
+
+%%
+
+[a-z]+  {yylval = strdup(yytext);
+         return VARIABLE;}
+
+[()L.]  {return *yytext;}
+
+[ \t\n] {;}
+
+<<EOF>> {return END;}
+
+.       {yyerror("invalid character");}
+
+%%
+
+
