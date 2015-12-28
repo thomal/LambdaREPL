@@ -1,8 +1,19 @@
 TODO:
-    - Can β-reduction neccecitate another α-reduction?
+    - The term (((\x.(\y.(x (x y)))) (\x.y)) z) is β-reduced to
+        ((λ3.y) ((λ3.y) z)) and no further.
+        
+        Futhermore reducing the original term segfaults on a second pass of
+            β-reduction.
+        
+        There is also two seperate variables with the same name, which ought to
+            have either been α-reduced away or β-reduced to the same term.
+        
+        Entering ((λx.y) ((λx.y) z)) does actually reduce to y, as expected.
+    - ω segfaults before? running out of memory.
+        ((λf.(f f)) (λf.(f f)))
 
 Usage:
-    - Enter one term, press enter for it to be executed
+    - Enter one term, press enter for it to be reduced.
 
 Syntax:
     [a-z]+      is a λ-term called a variable
@@ -20,12 +31,17 @@ Sugar:
     None at present.
 
 Present features implemented:
+    - No stack-depth limit, rather the limit is the available memory.
     - α-Reduction
+    - β-Reduction
 
 Planned features:
-    - β-Reduction
+    - Line editing and history, maybe via readline
+    - Sugar currying to accept λx y.(y x)
     - Sugar equivilent to LISPs let
     - Recursion via Y-Combinator
 
 Limits:
     2^64 variables IDs, aborts on exceeding this limit
+    Recursion depth is limited by available memory, due to this trying to
+        β-reduce ω is a very bad idea.

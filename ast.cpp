@@ -14,7 +14,6 @@ vid_t globallyUniqueID = 0; //Maximum number of variables
 std::string newID () {
     id_t oldid = globallyUniqueID;
     id_t newid = ++globallyUniqueID;
-    cout << "newID(): " << oldid << "->" << newid << "\n";
     if (newid > oldid) {
         std::ostringstream oss;
         oss << newid;
@@ -26,8 +25,22 @@ std::string newID () {
 }
 ////////////////////////////////////////////////////////////////////////////////
 
+//////// RTTI STUFF THAT OUGHTN'T BE IN THE BASE CLASS /////////////////////////
+void setNodesAOPPTTNIfApplicable (ASTNode* n, ASTNode** aoppttn) {
+    Application* a = dynamic_cast<Application*>(n);
+    if (a) {
+        a->addressOfParentsPointerToThisNode = aoppttn;
+    }
+    Variable* v = dynamic_cast<Variable*>(n);
+    if (v) {
+        v->addressOfParentsPointerToThisNode = aoppttn;
+    }
+}
+////////////////////////////////////////////////////////////////////////////////
+
 //////// VARIABLE //////////////////////////////////////////////////////////////
-Variable::~Variable () {
+Variable::~Variable() {
+    //TODO cout << "Variable::~Variable()\n";
     free(name);
 }
 
@@ -44,18 +57,42 @@ void Variable::alphaReduce(std::string oldname, std::string newname) {
 }
 
 void Variable::betaReduce() {
-    //TODO
+    //TODO cout << "Variable::betaReduce()\n";
+    //nop
 }
 
 bool Variable::isClosed() {
     return hasUniqueName;
 }
+
+void Variable::setParentPointers() {
+    //nop, a variable has no children
+}
+
+void Variable::performSubstitution(std::string vid, ASTNode* nodeToCopy) {
+    if (strcmp(name, vid.c_str())==0) {
+        ASTNode* n = nodeToCopy->copyForSubstitution (
+                                             addressOfParentsPointerToThisNode);
+        *addressOfParentsPointerToThisNode = n;
+        delete this;
+    }
+}
+
+ASTNode* Variable::copyForSubstitution(ASTNode** aoppttn) {
+    Variable* v = new Variable(strdup(name));
+    v->addressOfParentsPointerToThisNode = aoppttn;
+    v->setParentPointers();
+    v->alphaReduce();
+    return v;
+}
 ////////////////////////////////////////////////////////////////////////////////
 
 //////// ABSTRACTION ///////////////////////////////////////////////////////////
-Abstraction::~Abstraction () {
+Abstraction::~Abstraction() {
+    //TODO cout << "Abstraction::~Abstraction()\n";
     delete v;
-    delete n;
+    if (!preserveRHS)
+        delete n;
 }
 
 std::string Abstraction::toString() {
@@ -78,16 +115,53 @@ void Abstraction::alphaReduce(std::string oldname, std::string newname) {
 }
 
 void Abstraction::betaReduce() {
-    //TODO
+    //TODO cout << "Abstraction::betaReduce()\n";
+    //No need to β-reduce a variable. It's not and doesn't contain an
+    //  Application.
+    n->betaReduce();
 }
 
 bool Abstraction::isClosed() {
     return n->isClosed();
 }
+
+void Abstraction::setParentPointers() {
+    setNodesAOPPTTNIfApplicable(v, (ASTNode**)&v);
+    setNodesAOPPTTNIfApplicable(n, &n);
+    
+    v->setParentPointers();
+    n->setParentPointers();
+}
+
+void Abstraction::performSubstitution(std::string vid, ASTNode* nodeToCopy) {
+    v->performSubstitution(vid, nodeToCopy);
+    n->performSubstitution(vid, nodeToCopy);
+}
+
+ASTNode* Abstraction::copyForSubstitution(ASTNode** aoppttn) {
+    ASTNode* vcopy_ast = v->copyForSubstitution(0);
+    //Variable::copyForSubstitution --always-- returns a Variable*
+    Variable* vcopy = dynamic_cast<Variable*>(vcopy_ast);
+    ASTNode* ncopy = n->copyForSubstitution(0);
+    
+    Abstraction* a = new Abstraction(vcopy, ncopy);
+    
+    setNodesAOPPTTNIfApplicable(a->v, (ASTNode**)&(a->v));
+    setNodesAOPPTTNIfApplicable(a->n, &(a->n));
+    
+    vcopy->setParentPointers();
+    vcopy->alphaReduce();
+    
+    ncopy->setParentPointers();
+    ncopy->alphaReduce();
+    
+    return a;
+}
 ////////////////////////////////////////////////////////////////////////////////
 
 //////// APPLICATION ///////////////////////////////////////////////////////////
-Application::~Application () {
+Application::~Application() {
+    //TODO cout << "Application::~Application()\n";
     delete lhs;
     delete rhs;
 }
@@ -102,10 +176,61 @@ void Application::alphaReduce(std::string oldname, std::string newname) {
 }
 
 void Application::betaReduce() {
-    //TODO
+    //TODO cout << "Application::betaReduce()\n";
+    lhs->betaReduce();
+    rhs->betaReduce();
+
+    //If we have an abstraction on the left then we then replace all instances
+    //  of the lhs's argument with copies of the β-reduced rhs, we then set our
+    //  parents pointer to ourselves to be a pointer to the rhs of the lhs and
+    //  delete the lhs (except its rhs) and delete ourselves.
+    Abstraction* a = dynamic_cast<Abstraction*>(lhs);
+    if (a) {
+        //Replace all instances of the lhs's argument with copies of the rhs
+        std::string vid = std::string(a->v->name);
+        a->n->performSubstitution(vid, rhs);
+        
+        //Set our parents pointer to ourselves to point to the rhs of the lhs
+        *addressOfParentsPointerToThisNode = a->n;
+        
+        //Delete ourselves, and the lhs excluding its rhs.
+        a->preserveRHS = true;
+        delete this; //Our destructor takes care of destructing the lhs
+    }
 }
 
 bool Application::isClosed() {
     return lhs->isClosed() && rhs->isClosed();
+}
+
+void Application::setParentPointers() {
+    setNodesAOPPTTNIfApplicable(lhs, &lhs);
+    setNodesAOPPTTNIfApplicable(rhs, &rhs);
+    
+    lhs->setParentPointers();
+    rhs->setParentPointers();
+}
+
+void Application::performSubstitution(std::string vid, ASTNode* nodeToCopy) {
+    lhs->performSubstitution(vid, nodeToCopy);
+    rhs->performSubstitution(vid, nodeToCopy);
+}
+
+ASTNode* Application::copyForSubstitution(ASTNode** aoppttn) {
+    ASTNode* lcopy = lhs->copyForSubstitution(0);
+    ASTNode* rcopy = rhs->copyForSubstitution(0);
+    
+    Application* a = new Application(lcopy, rcopy);
+    
+    setNodesAOPPTTNIfApplicable(a->lhs, &(a->lhs));
+    setNodesAOPPTTNIfApplicable(a->rhs, &(a->rhs));
+    
+    lcopy->setParentPointers();
+    lcopy->alphaReduce();
+    
+    rcopy->setParentPointers();
+    rcopy->alphaReduce();
+    
+    return a;
 }
 ////////////////////////////////////////////////////////////////////////////////
