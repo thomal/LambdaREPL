@@ -1,4 +1,5 @@
-Lambda interpreter
+TODO:
+    - Can β-reduction neccecitate another α-reduction?
 
 Usage:
     - Enter one term, press enter for it to be executed
@@ -12,13 +13,19 @@ Syntax:
       for λ as one desires. Thus the following is a λ-term:
       (λx.(Ly.(\z.(y (x z)))))
 
+The following are not lambda terms but are recognised by the REPL:
+    :quit       This has the effect of quitting the REPL.
+
+Sugar:
+    None at present.
+
 Present features implemented:
-    - Parse input into AST
+    - α-Reduction
 
 Planned features:
-    - Interpretation
+    - β-Reduction
     - Sugar equivilent to LISPs let
     - Recursion via Y-Combinator
 
-The following are not lambda terms but are recognised by the REPL:
-    :quit       This has the effect of quitting the REPL.
+Limits:
+    2^64 variables IDs, aborts on exceeding this limit

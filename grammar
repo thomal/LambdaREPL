@@ -55,7 +55,16 @@ int main(void) {
         std::cout << "λ> ";
         yyparse();
         if (root) {
-            std::cout << root->toString() << std::endl;
+            std::cout << "input:\t" << root->toString() << std::endl;
+            
+            root->alphaReduce();
+            std::cout << "α-reduction:\t" << root->toString() << std::endl;
+            
+            std::cout << (root->isClosed()?"[Closed Term]\n":"[Open Term]\n");
+            
+            //root->betaReduce();
+            //std::cout << "β-reduction:\t" << root->toString() << std::endl;
+            
             delete root;
             root = 0;
         }
