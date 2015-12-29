@@ -19,6 +19,9 @@ class ASTNode {
     //NB: This function must be called before β-reducing
     virtual void setParentPointers() = 0;
     //NB: This function cannot be invoked until alphaReduce has been invoked
+    //NB: This function may invalidate pointers to the object it's invoked upon,
+    //      the new pointer is assigned to *addressOfParentsPointerToThisNode if
+    //      this occurs.
     virtual void performSubstitution(std::string vid, ASTNode* nodeToCopy) = 0;
     //Performs α-reduction on a newly allocated deep-copy which it returns.
     //  Must be freed by the caller.

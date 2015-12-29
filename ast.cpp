@@ -77,6 +77,10 @@ void Variable::setParentPointers() {
 }
 
 void Variable::performSubstitution(std::string vid, ASTNode* nodeToCopy) {
+    string callID; IFDEBUG(callID=newID();)
+    string origString = toString();
+    IFDEBUG(cout << "START var substitution " << callID << "\t(" << vid << ", " << nodeToCopy->toString() << ") in " << origString << endl;)
+
     if (strcmp(name, vid.c_str())==0) {
         //Deep copy the thing we're being replaced with
         ASTNode* n = nodeToCopy->copyForSubstitution (
@@ -87,6 +91,9 @@ void Variable::performSubstitution(std::string vid, ASTNode* nodeToCopy) {
         *addressOfParentsPointerToThisNode = n;
         //Then delete ourselves since we no longer have a parent to do so
         delete this;
+        IFDEBUG(cout << "END   var substitution " << callID << "\t(" << vid << ", " << nodeToCopy->toString() << ") in " << origString << " -> " << n->toString() << endl;)
+    } else {
+        IFDEBUG(cout << "END   var substitution " << callID << "\t(" << vid << ", " << nodeToCopy->toString() << ") in " << origString << " -> " << toString() << endl;)
     }
 }
 
@@ -154,9 +161,13 @@ void Abstraction::setParentPointers() {
 }
 
 void Abstraction::performSubstitution(std::string vid, ASTNode* nodeToCopy) {
+    string callID; IFDEBUG(callID=newID();)
+    string origString = toString();
+    IFDEBUG(cout << "START abs substitution " << callID << "\t(" << vid << ", " << nodeToCopy->toString() << ") in " << origString << endl;)
     v->performSubstitution(vid, nodeToCopy);
     n->performSubstitution(vid, nodeToCopy);
     alphaReduce();
+    IFDEBUG(cout << "END   abs substitution " << callID << "\t(" << vid << ", " << nodeToCopy->toString() << ") in " << origString << " -> " << toString() << endl;)
 }
 
 ASTNode* Abstraction::copyForSubstitution(ASTNode** aoppttn) {
@@ -221,20 +232,23 @@ void Application::betaReduce() {
         //Replace all instances of the lhs's argument with copies of the rhs
         std::string vid = std::string(a->v->name);
         a->n->performSubstitution(vid, rhs);
-        IFDEBUG(cout << "MID   app beta  reduce " << callID << "\t" << a->n->toString() << "\n";)
+        ASTNode* replacement = a->n; //a->n is been modified during substitution
+        IFDEBUG(cout << "MID   app beta  reduce " << callID << "\t" << replacement->toString() << "\n";)
         
-        IFDEBUG(cout << startStr << " β⇒ " << a->n->toString() << "\n";)
+        IFDEBUG(cout << startStr << " β⇒ " << replacement->toString() << "\n";)
         
         //Set our parents pointer to ourselves to point to the rhs of the lhs
-        *addressOfParentsPointerToThisNode = a->n;
+        *addressOfParentsPointerToThisNode = replacement;
+        //Update replacement with the new addressOfParentsPointerToThisNode
+        setNodesAOPPTTNIfApplicable(replacement, addressOfParentsPointerToThisNode);
         
         //Delete ourselves, and the lhs excluding its rhs.
         IFDEBUG(cout << "END   app beta  reduce " << callID << "\t" << "deleting self\n";)
         a->preserveRHS = true;
         delete this; //Our destructor takes care of destructing the lhs and rhs
-        
+
         //β-reduce our replacment
-        a->n->betaReduce();
+        replacement->betaReduce();
     } else {
         IFDEBUG(cout << "END   app beta  reduce " << callID << "\t" << toString() << "\n";)
     }
@@ -253,9 +267,13 @@ void Application::setParentPointers() {
 }
 
 void Application::performSubstitution(std::string vid, ASTNode* nodeToCopy) {
+    string callID; IFDEBUG(callID=newID();)
+    string origString = toString();
+    IFDEBUG(cout << "START app substitution " << callID << "\t(" << vid << ", " << nodeToCopy->toString() << ") in " << origString << endl;)
     lhs->performSubstitution(vid, nodeToCopy);
     rhs->performSubstitution(vid, nodeToCopy);
     alphaReduce();
+    IFDEBUG(cout << "END   abs substitution " << callID << "\t(" << vid << ", " << nodeToCopy->toString() << ") in " << origString << " -> " << toString() << endl;)
 }
 
 ASTNode* Application::copyForSubstitution(ASTNode** aoppttn) {

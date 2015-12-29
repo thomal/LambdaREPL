@@ -51,7 +51,7 @@ void yyerror(char *s) {
 }
 
 int main(void) {
-    std::cout << "Welcome, enter :quit to exit.\n";
+    std::cout << "Welcome, enter :quit to exit.\nTry running lambda with rlwrap!\nCopyright 2015, authors death unknown.\n\n";
     while (REPLrunning) {
         std::cout << "λ> ";
         yyparse();
