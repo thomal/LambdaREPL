@@ -58,20 +58,9 @@ int main(void) {
         if (root) {
             setNodesAOPPTTNIfApplicable(root, &root);
             root->setParentPointers();
-        
-            std::cout << "input:\t\t" << root->toString() << std::endl;
-            
             root->alphaReduce();
-            std::cout << "α-reduction:\t" << root->toString() << std::endl;
-            
-            std::cout << (root->isClosed()?"[Closed Term]\n":"[Open Term]\n");
-            
             root->betaReduce();
             std::cout << "β-reduction:\t" << root->toString() << std::endl;
-            
-            root->betaReduce();
-            std::cout << "β-reduction:\t" << root->toString() << std::endl;
-            
             delete root;
             root = 0;
         }

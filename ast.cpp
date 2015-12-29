@@ -6,10 +6,11 @@
 #include <sstream>  //ostringstream
 #include <stdint.h> //uint64_t
 using namespace std;
+#define IFDEBUG(X)
 
 //////// ID GENERATION /////////////////////////////////////////////////////////
-typedef uint64_t vid_t;
-vid_t globallyUniqueID = 0; //Maximum number of variables
+typedef uint64_t vid_t; //Maximum number of IDs is defined by this
+vid_t globallyUniqueID = 0;
 
 std::string newID () {
     id_t oldid = globallyUniqueID;
@@ -18,9 +19,9 @@ std::string newID () {
         std::ostringstream oss;
         oss << newid;
         return oss.str();
-    } else {
-        cout << "Variable limit of 2^64 bound variables exceeded.\n";
-        exit(1); //Overflow, 2^64 variable limit exceeded
+    } else { //Overflow
+        cout << "Limit of 2^64 unique IDs exceeded.\n";
+        exit(1);
     }
 }
 ////////////////////////////////////////////////////////////////////////////////
@@ -40,7 +41,6 @@ void setNodesAOPPTTNIfApplicable (ASTNode* n, ASTNode** aoppttn) {
 
 //////// VARIABLE //////////////////////////////////////////////////////////////
 Variable::~Variable() {
-    //TODO cout << "Variable::~Variable()\n";
     free(name);
 }
 
@@ -49,15 +49,22 @@ std::string Variable::toString() {
 }
 
 void Variable::alphaReduce(std::string oldname, std::string newname) {
+    IFDEBUG(string callID = newID();)
+    IFDEBUG(cout << "START var alpha reduce " << callID << "\t" << toString() << "\n";)
+    
     if (strcmp(name, oldname.c_str())==0) {
         free(name);
         name = strdup(newname.c_str());
         hasUniqueName = true;
     }
+    
+    IFDEBUG(cout << "END   var alpha reduce " << callID << "\t" << toString() << "\n";)
 }
 
 void Variable::betaReduce() {
-    //TODO cout << "Variable::betaReduce()\n";
+    IFDEBUG(string callID = newID();)
+    IFDEBUG(cout << "NOP   var beta  reduce " << callID << "\t" << toString() << "\n";)
+    
     //nop
 }
 
@@ -71,9 +78,14 @@ void Variable::setParentPointers() {
 
 void Variable::performSubstitution(std::string vid, ASTNode* nodeToCopy) {
     if (strcmp(name, vid.c_str())==0) {
+        //Deep copy the thing we're being replaced with
         ASTNode* n = nodeToCopy->copyForSubstitution (
                                              addressOfParentsPointerToThisNode);
+        //There's no need to n->alphaReduce() because it is already alphaReduced
+        //  with respect to itself.
+        //And replace ourselves with it
         *addressOfParentsPointerToThisNode = n;
+        //Then delete ourselves since we no longer have a parent to do so
         delete this;
     }
 }
@@ -89,7 +101,6 @@ ASTNode* Variable::copyForSubstitution(ASTNode** aoppttn) {
 
 //////// ABSTRACTION ///////////////////////////////////////////////////////////
 Abstraction::~Abstraction() {
-    //TODO cout << "Abstraction::~Abstraction()\n";
     delete v;
     if (!preserveRHS)
         delete n;
@@ -100,6 +111,9 @@ std::string Abstraction::toString() {
 }
 
 void Abstraction::alphaReduce(std::string oldname, std::string newname) {
+    IFDEBUG(string callID = newID();)
+    IFDEBUG(cout << "START abs alpha reduce " << callID << "\t" << toString() << "\n";)
+    
     //If we aren't shadowing oldname alpha-reduce rhs
     if (strcmp(v->name,oldname.c_str())!=0)
         n->alphaReduce(oldname, newname);
@@ -112,13 +126,19 @@ void Abstraction::alphaReduce(std::string oldname, std::string newname) {
         v->alphaReduce(oldNameForOurArg, newNameForOurArg);
         n->alphaReduce(oldNameForOurArg, newNameForOurArg);
     }
+    
+    IFDEBUG(cout << "END   abs alpha reduce " << callID << "\t" << toString() << "\n";)
 }
 
 void Abstraction::betaReduce() {
-    //TODO cout << "Abstraction::betaReduce()\n";
+    IFDEBUG(string callID = newID();)
+    IFDEBUG(cout << "START abs beta  reduce " << callID << "\t" << toString() << "\n";)
+
     //No need to β-reduce a variable. It's not and doesn't contain an
     //  Application.
     n->betaReduce();
+    
+    IFDEBUG(cout << "END   abs beta  reduce " << callID << "\t" << toString() << "\n";)
 }
 
 bool Abstraction::isClosed() {
@@ -136,6 +156,7 @@ void Abstraction::setParentPointers() {
 void Abstraction::performSubstitution(std::string vid, ASTNode* nodeToCopy) {
     v->performSubstitution(vid, nodeToCopy);
     n->performSubstitution(vid, nodeToCopy);
+    alphaReduce();
 }
 
 ASTNode* Abstraction::copyForSubstitution(ASTNode** aoppttn) {
@@ -161,7 +182,6 @@ ASTNode* Abstraction::copyForSubstitution(ASTNode** aoppttn) {
 
 //////// APPLICATION ///////////////////////////////////////////////////////////
 Application::~Application() {
-    //TODO cout << "Application::~Application()\n";
     delete lhs;
     delete rhs;
 }
@@ -171,31 +191,52 @@ std::string Application::toString() {
 }
 
 void Application::alphaReduce(std::string oldname, std::string newname) {
+    IFDEBUG(string callID = newID();)
+    IFDEBUG(cout << "START app alpha reduce " << callID << "\t" << toString() << "\n";)
+    
     lhs->alphaReduce(oldname, newname);
     rhs->alphaReduce(oldname, newname);
+    
+    IFDEBUG(cout << "END   app alpha reduce " << callID << "\t" << toString() << "\n";)
 }
 
 void Application::betaReduce() {
-    //TODO cout << "Application::betaReduce()\n";
+    std::string startStr = toString();
+    IFDEBUG(string callID = newID();)
+    IFDEBUG(cout << "START app beta  reduce " << callID << "\t" << toString() << "\n";)
+    
+    IFDEBUG(cout << "MID   app beta  reduce " << callID << "\t" << "lhs start\n";)
     lhs->betaReduce();
+    IFDEBUG(cout << "MID   app beta  reduce " << callID << "\t" << "lhs end/rhs start\n";)
     rhs->betaReduce();
+    IFDEBUG(cout << "MID   app beta  reduce " << callID << "\t" << "rhs end\n";)
 
     //If we have an abstraction on the left then we then replace all instances
     //  of the lhs's argument with copies of the β-reduced rhs, we then set our
     //  parents pointer to ourselves to be a pointer to the rhs of the lhs and
-    //  delete the lhs (except its rhs) and delete ourselves.
+    //  delete the lhs (except its rhs) and delete ourselves and delete the rhs.
     Abstraction* a = dynamic_cast<Abstraction*>(lhs);
     if (a) {
+        IFDEBUG(cout << "MID   app beta  reduce " << callID << "\t" << "substituting\n";)
         //Replace all instances of the lhs's argument with copies of the rhs
         std::string vid = std::string(a->v->name);
         a->n->performSubstitution(vid, rhs);
+        IFDEBUG(cout << "MID   app beta  reduce " << callID << "\t" << a->n->toString() << "\n";)
+        
+        cout << startStr << " β⇒ " << a->n->toString() << "\n";
         
         //Set our parents pointer to ourselves to point to the rhs of the lhs
         *addressOfParentsPointerToThisNode = a->n;
         
         //Delete ourselves, and the lhs excluding its rhs.
+        IFDEBUG(cout << "END   app beta  reduce " << callID << "\t" << "deleting self\n";)
         a->preserveRHS = true;
-        delete this; //Our destructor takes care of destructing the lhs
+        delete this; //Our destructor takes care of destructing the lhs and rhs
+        
+        //β-reduce our replacment
+        a->n->betaReduce();
+    } else {
+        IFDEBUG(cout << "END   app beta  reduce " << callID << "\t" << toString() << "\n";)
     }
 }
 
@@ -214,6 +255,7 @@ void Application::setParentPointers() {
 void Application::performSubstitution(std::string vid, ASTNode* nodeToCopy) {
     lhs->performSubstitution(vid, nodeToCopy);
     rhs->performSubstitution(vid, nodeToCopy);
+    alphaReduce();
 }
 
 ASTNode* Application::copyForSubstitution(ASTNode** aoppttn) {

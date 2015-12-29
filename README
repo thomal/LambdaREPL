@@ -1,16 +1,10 @@
 TODO:
-    - The term (((\x.(\y.(x (x y)))) (\x.y)) z) is β-reduced to
-        ((λ3.y) ((λ3.y) z)) and no further.
-        
-        Futhermore reducing the original term segfaults on a second pass of
-            β-reduction.
-        
-        There is also two seperate variables with the same name, which ought to
-            have either been α-reduced away or β-reduced to the same term.
-        
-        Entering ((λx.y) ((λx.y) z)) does actually reduce to y, as expected.
     - ω segfaults before? running out of memory.
         ((λf.(f f)) (λf.(f f)))
+    - lhs/rhs reduction order can be changed to reduce wasted steps?
+
+Test:
+    - (((\x.(\y.(x (x y)))) (\x.y)) z) => y
 
 Usage:
     - Enter one term, press enter for it to be reduced.
