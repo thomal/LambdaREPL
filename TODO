@@ -1,0 +1,9 @@
+TODO:
+    - Read from file
+    - Check this is still true: Ω segfaults (with a collossal stack of ~35k frames)
+    - lhs/rhs reduction order can be changed to reduce wasted steps?
+        For alpha only reduce when required: https://en.wikipedia.org/wiki/Lambda_calculus#Capture-avoiding_substitutions
+        For beta reduce anything about to be substituted first
+        Do this to such an extent that each line of :debug output is a useful
+            transformation, use to make seperate :trace command. :trace would be
+            invaluable if a bug is discovered in reduction.

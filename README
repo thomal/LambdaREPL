@@ -1,69 +1,57 @@
-TODO:
-    - Read from file
-    - Rewrite desugar to something like parse("(\x.(\y.(\f.((f x) y))))") rather
-        than the abomination of manual construction within a compiler
-    - Check this is still true: Ω segfaults (with a collossal stack of ~35k frames)
-    - lhs/rhs reduction order can be changed to reduce wasted steps?
-        For alpha only reduce when required: https://en.wikipedia.org/wiki/Lambda_calculus#Capture-avoiding_substitutions
-        For beta reduce anything about to be substituted first
-        Do this to such an extent that each line of :debug output is a useful
-            transformation, use to make seperate :trace command. :trace would be
-            invaluable if a bug is discovered in reduction.
+Enter one term, press enter for it to be reduced.
 
-Usage:
-    - Enter one term, press enter for it to be reduced.
-
-Useful Terms:
-    Name    Usage           Term                      Sugar
-    cons    ((P x) y)       (\x.(\y.(\f.((f x) y))))  ((cons a) b)
-    car     (F ((P x) y))   (\p.(p (\x.(\y.x))))      (car ((cons a) b))
-    cdr     (S ((P x) y))   (\p.(p (\x.(\y.y))))      (cdr ((cons a) b))
-
-Syntax:
-    [a-z]+      is a λ-term called a variable
-    (λx.y)      is a λ-term called an abstraction iif x is a variable and y is a λ-term
-    (x y)       is a λ-term called an application iif x and y are λ-terms
+#Syntax
+- [a-z]+      is a λ-term called a variable
+- (λx.y)      is a λ-term called an abstraction iif x is a variable and y is a λ-term
+- (x y)       is a λ-term called an application iif x and y are λ-terms
     
-    L and \ may be used inplace of λ if one desires. One may mix these symbols
-      for λ as one desires. Thus the following is a λ-term:
-      (λx.(Ly.(\z.(y (x z)))))
+L and \ may be used inplace of λ if one desires. One may mix these symbols for λ as one desires. Thus the following is a λ-term: (λx.(Ly.(\z.(y (x z)))))
 
-The following are not lambda terms but are recognised by the REPL:
-    :quit       This has the effect of quitting the REPL.
-    :debug      This toggles debug mode. Debug mode prints reduction information
+#Sugar
+|Name |  Usage               |   Actual Term               |
+| --- | -------------------- | --------------------------- |
+|cons |  ((cons a) b)        |   (λx.(λy.(λf.((f x) y))))  |
+|car  |  (car ((cons a) b))  |   (λl.(l (λx.(λy.x))))      |
+|cdr  |  (cdr ((cons a) b))  |   (λl.(l (λx.(λy.y))))      |
 
-Sugar:
-    cons, car, cdr
+#REPL Commands
+- :quit       This has the effect of quitting the REPL.
+- :debug      This toggles debug mode. Debug mode prints reduction information
 
-Examples:
-    - (((\x.(\y.(x (x y)))) (\x.y)) z) => y
-    - ((\x.(x y)) (\x.x)) => y
-    - ((λf.f) (λf.(f f))) => (λf.(f f))
-    - (((\x.(\y.(\f.((f x) y)))) a) b) => (λ4.((4 a) b))
-    - ((\x.(x (\y.(\z.y)))) (((\x.(\y.(\f.((f x) y)))) a) b)) => a
-    - ((\x.(x (\y.(\z.z)))) (((\x.(\y.(\f.((f x) y)))) a) b)) => b
+#Examples
+- (((λx.(λy.(x (x y)))) (λx.y)) z) ⇒ y
+- ((λx.(x y)) (λx.x)) ⇒ y
+- ((λf.f) (λf.(f f))) ⇒ (λf.(f f))
+- (((λx.(λy.(λf.((f x) y)))) a) b) ⇒ (λ4.((4 a) b))
+- ((λx.(x (λy.(λz.y)))) (((λx.(λy.(λf.((f x) y)))) a) b)) ⇒ a
+- ((λx.(x (λy.(λz.z)))) (((λx.(λy.(λf.((f x) y)))) a) b)) ⇒ b
+- (car ((cons a) b)) ⇒ a
+- (cdr ((cons a) b)) ⇒ b
 
-Present features implemented:
-    - α-Reduction
-    - β-Reduction
-    - Debug mode
-    - Sugar for cons/car/cdr
+#Present features implemented
+- α-Reduction
+- β-Reduction
+- Debug mode
+- Sugar for cons/car/cdr
 
-Planned features:
-    - map, fold
-    - No stack-depth limit, rather the limit is the available memory.
-        - See Application::betaReduce recursively β-reducing the lhs and rhs
-        - Walk the AST without recursion
-    - Line editing and history, maybe via GNU readline
-    - Sugar currying to accept (λx y.(y x))
-    - Church numerals
-    - successor/predessessor
-    - +/-
-    - *//
-    - Recursion via Y-Combinator
-    - Sugar equivilent to LISPs let
+#Planned features
+- map, fold
+- No stack-depth limit, rather the limit is the available memory.
+  - See Application::betaReduce recursively β-reducing the lhs and rhs
+  - Walk the AST without recursion
+- Line editing and history, maybe via GNU readline
+- Sugar currying to accept (λx y.(y x))
+- Church numerals
+- successor/predessessor
+- +/-
+- *// (integer division only at first)
+- Recursion via Y-Combinator
+- Sugar equivilent to LISPs let
 
-Limits:
-    2^64 variables IDs, aborts on exceeding this limit
-    Recursion depth is limited by available memory, due to this trying to
-        β-reduce Ω is a very bad idea.
+#Limits
+- 2^64 variables IDs, aborts on exceeding this limit
+- Recursion depth is limited by available memory, due to this trying to β-reduce Ω is a very bad idea.
+- Variables cannot have the following names:
+  - cons
+  - car
+  - cdr
