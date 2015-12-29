@@ -1,5 +1,6 @@
 TODO:
-    - ω segfaults (with a collossal stack of ~35k frames)
+    - Read from file
+    - Check this is still true: Ω segfaults (with a collossal stack of ~35k frames)
     - lhs/rhs reduction order can be changed to reduce wasted steps?
         For alpha only reduce when required: https://en.wikipedia.org/wiki/Lambda_calculus#Capture-avoiding_substitutions
         For beta reduce anything about to be substituted first
@@ -26,7 +27,7 @@ Usage:
 
 Syntax:
     [a-z]+      is a λ-term called a variable
-    (λx.y)      is a λ-term called an abstraction iif x and y are λ-terms
+    (λx.y)      is a λ-term called an abstraction iif x is a variable and y is a λ-term
     (x y)       is a λ-term called an application iif x and y are λ-terms
     
     L and \ may be used inplace of λ if one desires. One may mix these symbols
@@ -63,4 +64,4 @@ Planned features:
 Limits:
     2^64 variables IDs, aborts on exceeding this limit
     Recursion depth is limited by available memory, due to this trying to
-        β-reduce ω is a very bad idea.
+        β-reduce Ω is a very bad idea.
