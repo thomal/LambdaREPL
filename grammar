@@ -5,12 +5,13 @@
     #include <stdio.h>
     #include <string>
     #include <iostream>
-    #include "common.h"
     #include "ast.hpp"
     #include "repl.hpp"
+    #include "CPPcommon.hpp"
     
     ASTNode* root;
     bool REPLrunning = true;
+    bool debugMode = false;
     
     extern "C"
     {
@@ -60,7 +61,7 @@ int main(void) {
             root->setParentPointers();
             root->alphaReduce();
             root->betaReduce();
-            std::cout << "β-reduction:\t" << root->toString() << std::endl;
+            std::cout << root->toString() << std::endl;
             delete root;
             root = 0;
         }

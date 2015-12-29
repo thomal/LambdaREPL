@@ -1,10 +1,10 @@
 TODO:
-    - ω segfaults before? running out of memory.
-        ((λf.(f f)) (λf.(f f)))
+    - ω segfaults
     - lhs/rhs reduction order can be changed to reduce wasted steps?
 
 Test:
     - (((\x.(\y.(x (x y)))) (\x.y)) z) => y
+    - ((λf.f) (λf.(f f))) => (λf.(f f))
 
 Usage:
     - Enter one term, press enter for it to be reduced.
@@ -20,17 +20,21 @@ Syntax:
 
 The following are not lambda terms but are recognised by the REPL:
     :quit       This has the effect of quitting the REPL.
+    :debug      This toggles debug mode. Debug mode prints reduction information
 
 Sugar:
     None at present.
 
 Present features implemented:
-    - No stack-depth limit, rather the limit is the available memory.
     - α-Reduction
     - β-Reduction
+    - Debug mode
 
 Planned features:
-    - Line editing and history, maybe via readline
+    - No stack-depth limit, rather the limit is the available memory.
+        - See Application::betaReduce recursively β-reducing the lhs and rhs
+        - Walk the AST without recursion
+    - Line editing and history, maybe via GNU readline
     - Sugar currying to accept λx y.(y x)
     - Sugar equivilent to LISPs let
     - Recursion via Y-Combinator

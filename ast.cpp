@@ -5,8 +5,8 @@
 #include <iostream>
 #include <sstream>  //ostringstream
 #include <stdint.h> //uint64_t
+#include "CPPcommon.hpp"
 using namespace std;
-#define IFDEBUG(X)
 
 //////// ID GENERATION /////////////////////////////////////////////////////////
 typedef uint64_t vid_t; //Maximum number of IDs is defined by this
@@ -49,7 +49,7 @@ std::string Variable::toString() {
 }
 
 void Variable::alphaReduce(std::string oldname, std::string newname) {
-    IFDEBUG(string callID = newID();)
+    string callID; IFDEBUG(callID=newID();)
     IFDEBUG(cout << "START var alpha reduce " << callID << "\t" << toString() << "\n";)
     
     if (strcmp(name, oldname.c_str())==0) {
@@ -62,7 +62,7 @@ void Variable::alphaReduce(std::string oldname, std::string newname) {
 }
 
 void Variable::betaReduce() {
-    IFDEBUG(string callID = newID();)
+    string callID; IFDEBUG(callID=newID();)
     IFDEBUG(cout << "NOP   var beta  reduce " << callID << "\t" << toString() << "\n";)
     
     //nop
@@ -111,7 +111,7 @@ std::string Abstraction::toString() {
 }
 
 void Abstraction::alphaReduce(std::string oldname, std::string newname) {
-    IFDEBUG(string callID = newID();)
+    string callID; IFDEBUG(callID=newID();)
     IFDEBUG(cout << "START abs alpha reduce " << callID << "\t" << toString() << "\n";)
     
     //If we aren't shadowing oldname alpha-reduce rhs
@@ -131,7 +131,7 @@ void Abstraction::alphaReduce(std::string oldname, std::string newname) {
 }
 
 void Abstraction::betaReduce() {
-    IFDEBUG(string callID = newID();)
+    string callID; IFDEBUG(callID=newID();)
     IFDEBUG(cout << "START abs beta  reduce " << callID << "\t" << toString() << "\n";)
 
     //No need to β-reduce a variable. It's not and doesn't contain an
@@ -191,7 +191,7 @@ std::string Application::toString() {
 }
 
 void Application::alphaReduce(std::string oldname, std::string newname) {
-    IFDEBUG(string callID = newID();)
+    string callID; IFDEBUG(callID=newID();)
     IFDEBUG(cout << "START app alpha reduce " << callID << "\t" << toString() << "\n";)
     
     lhs->alphaReduce(oldname, newname);
@@ -202,7 +202,7 @@ void Application::alphaReduce(std::string oldname, std::string newname) {
 
 void Application::betaReduce() {
     std::string startStr = toString();
-    IFDEBUG(string callID = newID();)
+    string callID; IFDEBUG(callID=newID();)
     IFDEBUG(cout << "START app beta  reduce " << callID << "\t" << toString() << "\n";)
     
     IFDEBUG(cout << "MID   app beta  reduce " << callID << "\t" << "lhs start\n";)
@@ -223,7 +223,7 @@ void Application::betaReduce() {
         a->n->performSubstitution(vid, rhs);
         IFDEBUG(cout << "MID   app beta  reduce " << callID << "\t" << a->n->toString() << "\n";)
         
-        cout << startStr << " β⇒ " << a->n->toString() << "\n";
+        IFDEBUG(cout << startStr << " β⇒ " << a->n->toString() << "\n";)
         
         //Set our parents pointer to ourselves to point to the rhs of the lhs
         *addressOfParentsPointerToThisNode = a->n;
