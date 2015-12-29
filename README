@@ -1,5 +1,7 @@
 TODO:
     - Read from file
+    - Rewrite desugar to something like parse("(\x.(\y.(\f.((f x) y))))") rather
+        than the abomination of manual construction within a compiler
     - Check this is still true: Ω segfaults (with a collossal stack of ~35k frames)
     - lhs/rhs reduction order can be changed to reduce wasted steps?
         For alpha only reduce when required: https://en.wikipedia.org/wiki/Lambda_calculus#Capture-avoiding_substitutions
@@ -8,22 +10,14 @@ TODO:
             transformation, use to make seperate :trace command. :trace would be
             invaluable if a bug is discovered in reduction.
 
-Test:
-    - (((\x.(\y.(x (x y)))) (\x.y)) z) => y
-    - ((\x.(x y)) (\x.x)) => y
-    - ((λf.f) (λf.(f f))) => (λf.(f f))
-    - (((\x.(\y.(\f.((f x) y)))) a) b) => (λ4.((4 a) b))
-    - ((\x.(x (\y.(\z.y)))) (((\x.(\y.(\f.((f x) y)))) a) b)) => a
-    - ((\x.(x (\y.(\z.z)))) (((\x.(\y.(\f.((f x) y)))) a) b)) => b
-
-Useful Terms:
-    Name        Usage           Term
-    - Pair      ((P x) y)       (\x.(\y.(\f.((f x) y))))
-    - First     (F ((P x) y))   (\p.(p (\x.(\y.x))))
-    - Second    (S ((P x) y))   (\p.(p (\x.(\y.y))))
-
 Usage:
     - Enter one term, press enter for it to be reduced.
+
+Useful Terms:
+    Name    Usage           Term                      Sugar
+    cons    ((P x) y)       (\x.(\y.(\f.((f x) y))))  ((cons a) b)
+    car     (F ((P x) y))   (\p.(p (\x.(\y.x))))      (car ((cons a) b))
+    cdr     (S ((P x) y))   (\p.(p (\x.(\y.y))))      (cdr ((cons a) b))
 
 Syntax:
     [a-z]+      is a λ-term called a variable
@@ -39,16 +33,24 @@ The following are not lambda terms but are recognised by the REPL:
     :debug      This toggles debug mode. Debug mode prints reduction information
 
 Sugar:
-    None at present. Will implement sugar for all above useful terms, and
-    currying.
+    cons, car, cdr
+
+Examples:
+    - (((\x.(\y.(x (x y)))) (\x.y)) z) => y
+    - ((\x.(x y)) (\x.x)) => y
+    - ((λf.f) (λf.(f f))) => (λf.(f f))
+    - (((\x.(\y.(\f.((f x) y)))) a) b) => (λ4.((4 a) b))
+    - ((\x.(x (\y.(\z.y)))) (((\x.(\y.(\f.((f x) y)))) a) b)) => a
+    - ((\x.(x (\y.(\z.z)))) (((\x.(\y.(\f.((f x) y)))) a) b)) => b
 
 Present features implemented:
     - α-Reduction
     - β-Reduction
     - Debug mode
+    - Sugar for cons/car/cdr
 
 Planned features:
-    - cons, car, cdr, map, fold
+    - map, fold
     - No stack-depth limit, rather the limit is the available memory.
         - See Application::betaReduce recursively β-reducing the lhs and rhs
         - Walk the AST without recursion

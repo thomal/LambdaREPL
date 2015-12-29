@@ -4,20 +4,38 @@
     #include "common.h"
     #include "lambda.hpp"
     void yyerror(char *);
+    void desugar (char* yytext);
 %}
 
 %%
 
-[a-z]+   {yylval = strdup(yytext);
-          return VARIABLE;}
-[().]    {return *yytext;}
-λ        {return LAM;}  /* Flex is 8-bit so λ is >1 bytes so can't be in a [] */
-L        {return LAM;}
-\\       {return LAM;}  /* It kinda looks like λ and is easier to type */
-:        {return REPL_ESCAPE;}
-[ \t\n]  {;}
-<<EOF>>  {return END;}
+cons|car|cdr {desugar(yytext);}
+[a-z]+       {yylval = strdup(yytext);
+              return VARIABLE;}
+[().]        {return *yytext;}
+λ            {return LAM;}  /* Flex is 8-bit so λ is >1 bytes so can't be in a [] */
+L            {return LAM;}
+\\           {return LAM;}  /* It kinda looks like λ and is easier to type */
+:            {return REPL_ESCAPE;}
+[ \t\n\r\f]  {;}
+<<EOF>>      {return END;}
 
 .        {yyerror("invalid character");}
 
 %%
+
+void unputstr (char* str) {
+    int len = strlen(str);
+    while (len > 0)
+        unput(str[--len]);
+}
+
+void desugar (char* yytext) {
+    char* cons = "(Lx.(Ly.(Lf.((f x) y))))";
+    char* car  = "(Lp.(p (Lx.(Ly.x))))";
+    char* cdr  = "(Lp.(p (Lx.(Ly.y))))";
+
+         if (strcmp(yytext, "cons")==0) unputstr(cons);
+    else if (strcmp(yytext, "car")==0)  unputstr(car);
+    else if (strcmp(yytext, "cdr")==0)  unputstr(cdr);
+}

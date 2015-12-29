@@ -13,11 +13,16 @@ class ASTNode {
     virtual void alphaReduce(std::string oldname = "", std::string newname = "") = 0;
     //NB: This function cannot be invoked until setParentPointers has been
     //      invoked
+    //NB: This function may invalidate pointers to the object it's invoked upon,
+    //      the new pointer is assigned to *addressOfParentsPointerToThisNode if
+    //      this occurs.
     virtual void betaReduce() = 0;
     //NB: This function cannot be invoked until alphaReduce has been invoked
     virtual bool isClosed() = 0;
     //NB: This function must be called before β-reducing
     virtual void setParentPointers() = 0;
+    //NB: This function cannot be invoked until setParentPointers has been
+    //      invoked
     //NB: This function cannot be invoked until alphaReduce has been invoked
     //NB: This function may invalidate pointers to the object it's invoked upon,
     //      the new pointer is assigned to *addressOfParentsPointerToThisNode if
