@@ -35,6 +35,14 @@ L and \ may be used inplace of λ if one desires. One may mix these symbols for 
 - Sugar for cons/car/cdr
 
 #Planned features
+- true/false
+- if
+- nil?
+- Y-combinator
+- recursive function to reverse a list
+- pretty-print lists
+- pretty-print true and false
+- think about how to let the user define functions with names, consider let
 - map, fold
 - No stack-depth limit, rather the limit is the available memory.
   - See Application::betaReduce recursively β-reducing the lhs and rhs
@@ -45,8 +53,6 @@ L and \ may be used inplace of λ if one desires. One may mix these symbols for 
 - successor/predessessor
 - +/-
 - *// (integer division only at first)
-- Recursion via Y-Combinator
-- Sugar equivilent to LISPs let
 
 #Limits
 - 2^64 variables IDs, aborts on exceeding this limit
